@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/gradient_background"
+    tools:context=".MainActivity">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <!-- Header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:layout_marginBottom="32dp"
+                android:layout_marginTop="40dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🛡️"
+                    android:textSize="64sp"
+                    android:layout_marginBottom="16dp"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Ravan Security"
+                    android:textSize="32sp"
+                    android:textColor="#E94560"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Anti-Theft Protection System"
+                    android:textSize="14sp"
+                    android:textColor="#888888"
+                    android:layout_marginTop="8dp"/>
+
+            </LinearLayout>
+
+            <!-- Status Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="#1E1E2E"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="8dp"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:id="@+id/tvStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🔴 Server Stopped"
+                        android:textSize="22sp"
+                        android:textColor="#E74C3C"
+                        android:textStyle="bold"
+                        android:layout_gravity="center"
+                        android:layout_marginBottom="16dp"/>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="#333333"
+                        android:layout_marginBottom="16dp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Network Information"
+                        android:textSize="12sp"
+                        android:textColor="#888888"
+                        android:textAllCaps="true"
+                        android:letterSpacing="0.1"/>
+
+                    <TextView
+                        android:id="@+id/tvIpAddress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="IPv6: Loading..."
+                        android:textSize="14sp"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginTop="8dp"
+                        android:fontFamily="monospace"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Access URL"
+                        android:textSize="12sp"
+                        android:textColor="#888888"
+                        android:textAllCaps="true"
+                        android:letterSpacing="0.1"
+                        android:layout_marginTop="16dp"/>
+
+                    <TextView
+                        android:id="@+id/tvServerUrl"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Not running"
+                        android:textSize="13sp"
+                        android:textColor="#E94560"
+                        android:layout_marginTop="8dp"
+                        android:fontFamily="monospace"
+                        android:padding="12dp"
+                        android:background="@drawable/url_background"/>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <!-- Action Buttons -->
+            <Button
+                android:id="@+id/btnStartStop"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:text="Start Server"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#2ECC71"
+                app:cornerRadius="12dp"
+                android:layout_marginBottom="12dp"/>
+
+            <Button
+                android:id="@+id/btnCopyUrl"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="📋 Copy URL to Clipboard"
+                android:textSize="14sp"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#3498DB"
+                app:cornerRadius="12dp"
+                android:layout_marginBottom="12dp"/>
+
+            <Button
+                android:id="@+id/btnBatteryOptimization"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="🔋 Disable Battery Optimization"
+                android:textSize="14sp"
+                android:textColor="#FFFFFF"
+                android:backgroundTint="#9B59B6"
+                app:cornerRadius="12dp"
+                android:layout_marginBottom="24dp"/>
+
+            <!-- Info Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="#1E1E2E"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ℹ️ How It Works"
+                        android:textSize="16sp"
+                        android:textColor="#E94560"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp"/>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="1. Start the server\n2. Copy the IPv6 URL\n3. Access from any browser on the same network or via IPv6\n4. Browse files, view call logs &amp; contacts\n\n⚠️ Important: Disable battery optimization for reliable background operation."
+                        android:textSize="13sp"
+                        android:textColor="#AAAAAA"
+                        android:lineSpacingExtra="4dp"/>
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="v1.0 • Port 8080"
+                android:textSize="12sp"
+                android:textColor="#666666"
+                android:layout_gravity="center"
+                android:layout_marginTop="24dp"/>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
