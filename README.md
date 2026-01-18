@@ -33,6 +33,8 @@ chmod +x build.sh
 
 That's it! The builder handles everything - Java check, keystore, logo, and APK.
 
+📖 **For detailed build guide, read [Builder README](builder/README.md)**
+
 ---
 
 ## ✨ What's Inside
