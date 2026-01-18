@@ -2,6 +2,14 @@ plugins {
     id 'com.android.application'
 }
 
+// Load keystore properties from file
+def keystorePropertiesFile = rootProject.file('keystore.properties')
+def keystoreProperties = new Properties()
+
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace 'com.security.ravan'
     compileSdk 34
@@ -14,8 +22,8 @@ android {
         applicationId "com.security.ravan"
         minSdk 26
         targetSdk 34
-        versionCode 7
-        versionName "1.7"
+        versionCode 20
+        versionName "2.0"
         
         // Read WEBHOOK_URL from local.properties
         def localProperties = new Properties()
@@ -30,10 +38,12 @@ android {
 
     signingConfigs {
         release {
-            storeFile file('../ravan-keystore.jks')
-            storePassword 'ravan123'
-            keyAlias 'ravan'
-            keyPassword 'ravan123'
+            if (keystorePropertiesFile.exists()) {
+                storeFile file(keystoreProperties['storeFile'] ?: '../ravan-keystore.jks')
+                storePassword keystoreProperties['storePassword'] ?: 'ravan123'
+                keyAlias keystoreProperties['keyAlias'] ?: 'ravan-key'
+                keyPassword keystoreProperties['keyPassword'] ?: 'ravan123'
+            }
         }
     }
 
@@ -44,7 +54,9 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 

@@ -269,6 +269,16 @@ generate_keystore() {
         echo -e "${GREEN}[✓] Keystore generated successfully!${NC}"
         echo ""
         
+        # Create keystore.properties for Gradle
+        KEYSTORE_PROPS="$PROJECT_DIR/keystore.properties"
+        cat > "$KEYSTORE_PROPS" << EOF
+storeFile=ravan-keystore.jks
+storePassword=$KEYSTORE_PASS
+keyAlias=$KEY_ALIAS
+keyPassword=$KEYSTORE_PASS
+EOF
+        echo -e "${GREEN}[✓] Created keystore.properties for Gradle${NC}"
+        
         # Save to config
         echo "KEYSTORE_PATH=$KEYSTORE_PATH" > "$CONFIG_FILE"
         echo "KEY_ALIAS=$KEY_ALIAS" >> "$CONFIG_FILE"

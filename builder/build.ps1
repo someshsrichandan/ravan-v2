@@ -164,6 +164,7 @@ function New-Keystore {
     Write-Host ""
     
     $keystorePath = Join-Path $ProjectDir "ravan-keystore.jks"
+    $keystorePropsFile = Join-Path $ProjectDir "keystore.properties"
     
     if (Test-Path $keystorePath) {
         Write-Host "[!] Keystore already exists at: $keystorePath" -ForegroundColor Yellow
@@ -210,7 +211,17 @@ function New-Keystore {
         Write-Host "[OK] Keystore generated successfully!" -ForegroundColor Green
         Write-Host ""
         
-        # Save config
+        # Create keystore.properties for Gradle
+        $keystorePropsContent = @"
+storeFile=ravan-keystore.jks
+storePassword=$keystorePass
+keyAlias=$keyAlias
+keyPassword=$keystorePass
+"@
+        Set-Content -Path $keystorePropsFile -Value $keystorePropsContent
+        Write-Host "[OK] Created keystore.properties for Gradle" -ForegroundColor Green
+        
+        # Save config for builder
         $config = @{
             KeystorePath = $keystorePath
             KeyAlias = $keyAlias

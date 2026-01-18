@@ -50,6 +50,12 @@ captures/
 *.jks
 *.keystore
 ravan-keystore.jks
+keystore.properties
+
+# Builder config (contains passwords)
+builder/build_config.txt
+builder/build_config.json
+builder/output/*.apk
 
 # External native build folder generated in Android Studio 2.2 and later
 .externalNativeBuild

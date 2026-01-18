@@ -167,6 +167,14 @@ if %errorlevel% equ 0 (
     echo [92m[✓] Keystore generated successfully![0m
     echo.
     
+    REM Create keystore.properties for Gradle
+    set "KEYSTORE_PROPS=%PROJECT_DIR%\keystore.properties"
+    echo storeFile=ravan-keystore.jks> "!KEYSTORE_PROPS!"
+    echo storePassword=!KEYSTORE_PASS!>> "!KEYSTORE_PROPS!"
+    echo keyAlias=!KEY_ALIAS!>> "!KEYSTORE_PROPS!"
+    echo keyPassword=!KEYSTORE_PASS!>> "!KEYSTORE_PROPS!"
+    echo [92m[✓] Created keystore.properties for Gradle[0m
+    
     REM Save to config
     echo KEYSTORE_PATH=%KEYSTORE_PATH%> "%CONFIG_FILE%"
     echo KEY_ALIAS=!KEY_ALIAS!>> "%CONFIG_FILE%"
