@@ -27,23 +27,22 @@ $DefaultSettings = @{
 function Write-Banner {
     Clear-Host
     Write-Host ""
-    Write-Host "╔══════════════════════════════════════════════════════════════╗" -ForegroundColor Red
-    Write-Host "║                                                              ║" -ForegroundColor Red
-    Write-Host "║     ██████╗  █████╗ ██╗   ██╗ █████╗ ███╗   ██╗              ║" -ForegroundColor Red
-    Write-Host "║     ██╔══██╗██╔══██╗██║   ██║██╔══██╗████╗  ██║              ║" -ForegroundColor Red
-    Write-Host "║     ██████╔╝███████║██║   ██║███████║██╔██╗ ██║              ║" -ForegroundColor Red
-    Write-Host "║     ██╔══██╗██╔══██║╚██╗ ██╔╝██╔══██║██║╚██╗██║              ║" -ForegroundColor Red
-    Write-Host "║     ██║  ██║██║  ██║ ╚████╔╝ ██║  ██║██║ ╚████║              ║" -ForegroundColor Red
-    Write-Host "║     ╚═╝  ╚═╝╚═╝  ╚═╝  ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═══╝              ║" -ForegroundColor Red
-    Write-Host "║                                                              ║" -ForegroundColor Red
-    Write-Host "║                    APK BUILDER v2.0                          ║" -ForegroundColor Red
-    Write-Host "║                    PowerShell Edition                        ║" -ForegroundColor Red
-    Write-Host "║                                                              ║" -ForegroundColor Red
-    Write-Host "╠══════════════════════════════════════════════════════════════╣" -ForegroundColor Red
-    Write-Host "║  Developed by: Somesh                                        ║" -ForegroundColor Magenta
-    Write-Host "║  GitHub:   https://github.com/someshsrichandan               ║" -ForegroundColor Magenta
-    Write-Host "║  LinkedIn: https://linkedin.com/in/someshsrichandan          ║" -ForegroundColor Magenta
-    Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor Red
+    Write-Host "================================================================" -ForegroundColor Red
+    Write-Host "                                                                " -ForegroundColor Red
+    Write-Host "  RRRR    AAA   V   V   AAA   N   N                            " -ForegroundColor Red
+    Write-Host "  R   R  A   A  V   V  A   A  NN  N                            " -ForegroundColor Red
+    Write-Host "  RRRR   AAAAA  V   V  AAAAA  N N N                            " -ForegroundColor Red
+    Write-Host "  R  R   A   A   V V   A   A  N  NN                            " -ForegroundColor Red
+    Write-Host "  R   R  A   A    V    A   A  N   N                            " -ForegroundColor Red
+    Write-Host "                                                                " -ForegroundColor Red
+    Write-Host "                 APK BUILDER v2.0                               " -ForegroundColor Red
+    Write-Host "                 PowerShell Edition                             " -ForegroundColor Red
+    Write-Host "                                                                " -ForegroundColor Red
+    Write-Host "================================================================" -ForegroundColor Red
+    Write-Host "  Developed by: Somesh                                " -ForegroundColor Magenta
+    Write-Host "  GitHub:   https://github.com/someshsrichandan                 " -ForegroundColor Magenta
+    Write-Host "  LinkedIn: https://linkedin.com/in/someshsrichandan            " -ForegroundColor Magenta
+    Write-Host "================================================================" -ForegroundColor Red
     Write-Host ""
 }
 
@@ -60,7 +59,7 @@ function Test-Requirements {
         Write-Host "[>] Options:" -ForegroundColor Magenta
         Write-Host "    1. Auto-install Java (using winget/chocolatey)"
         Write-Host "    2. Show manual installation instructions"
-        Write-Host "    3. Skip (I'll install later)"
+        Write-Host "    3. Skip (I will install later)"
         Write-Host ""
         
         $option = Read-Host "    Choose option [1]"
@@ -79,17 +78,17 @@ function Test-Requirements {
     else {
         try {
             $javaVersion = & java -version 2>&1 | Select-String "version" | ForEach-Object { $_.ToString() }
-            Write-Host "[✓] Java found: $javaVersion" -ForegroundColor Green
+            Write-Host "[OK] Java found: $javaVersion" -ForegroundColor Green
         }
         catch {
-            Write-Host "[✓] Java found" -ForegroundColor Green
+            Write-Host "[OK] Java found" -ForegroundColor Green
         }
     }
     
     # Check keytool
     $keytoolExists = Get-Command keytool -ErrorAction SilentlyContinue
     if ($keytoolExists) {
-        Write-Host "[✓] keytool found" -ForegroundColor Green
+        Write-Host "[OK] keytool found" -ForegroundColor Green
     }
     else {
         Write-Host "[!] keytool not found. Usually comes with JDK." -ForegroundColor Yellow
@@ -108,7 +107,7 @@ function Install-Java {
         Write-Host "[>] Installing via winget..." -ForegroundColor Yellow
         try {
             & winget install EclipseAdoptium.Temurin.11.JDK --accept-source-agreements --accept-package-agreements
-            Write-Host "[✓] Java installed! Please restart PowerShell." -ForegroundColor Green
+            Write-Host "[OK] Java installed! Please restart PowerShell." -ForegroundColor Green
             return
         }
         catch {
@@ -122,7 +121,7 @@ function Install-Java {
         Write-Host "[>] Installing via Chocolatey..." -ForegroundColor Yellow
         try {
             & choco install temurin11 -y
-            Write-Host "[✓] Java installed! Please restart PowerShell." -ForegroundColor Green
+            Write-Host "[OK] Java installed! Please restart PowerShell." -ForegroundColor Green
             return
         }
         catch {
@@ -138,14 +137,14 @@ function Install-Java {
 
 function Show-ManualJavaInstall {
     Write-Host ""
-    Write-Host "╔══════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-    Write-Host "║              MANUAL JAVA INSTALLATION GUIDE                  ║" -ForegroundColor Cyan
-    Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
+    Write-Host "================================================================" -ForegroundColor Cyan
+    Write-Host "              MANUAL JAVA INSTALLATION GUIDE                    " -ForegroundColor Cyan
+    Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "Option 1: Download from Adoptium (Recommended)" -ForegroundColor White
     Write-Host "    1. Go to: https://adoptium.net/temurin/releases/"
-    Write-Host "    2. Download 'JDK 11' or 'JDK 17' for Windows x64"
-    Write-Host "    3. Run the installer (choose 'Add to PATH')"
+    Write-Host "    2. Download JDK 11 or JDK 17 for Windows x64"
+    Write-Host "    3. Run the installer (choose Add to PATH)"
     Write-Host "    4. Restart PowerShell and run this script again"
     Write-Host ""
     Write-Host "Option 2: Using winget (Windows 11)" -ForegroundColor White
@@ -170,7 +169,7 @@ function New-Keystore {
         Write-Host "[!] Keystore already exists at: $keystorePath" -ForegroundColor Yellow
         $regenerate = Read-Host "    Generate new keystore? (y/N)"
         if ($regenerate -ne "y" -and $regenerate -ne "Y") {
-            Write-Host "[✓] Using existing keystore" -ForegroundColor Green
+            Write-Host "[OK] Using existing keystore" -ForegroundColor Green
             return
         }
         Remove-Item $keystorePath -Force
@@ -208,7 +207,7 @@ function New-Keystore {
             -validity $validityDays -keystore $keystorePath `
             -storepass $keystorePass -keypass $keystorePass -dname $dname 2>$null
         
-        Write-Host "[✓] Keystore generated successfully!" -ForegroundColor Green
+        Write-Host "[OK] Keystore generated successfully!" -ForegroundColor Green
         Write-Host ""
         
         # Save config
@@ -250,7 +249,7 @@ function Set-Logo {
         "1" {
             if (Test-Path $DefaultLogo) {
                 $logoPath = $DefaultLogo
-                Write-Host "[✓] Using default Ravan logo" -ForegroundColor Green
+                Write-Host "[OK] Using default Ravan logo" -ForegroundColor Green
             }
             else {
                 Write-Host "[!] Default logo not found at: $DefaultLogo" -ForegroundColor Red
@@ -268,7 +267,7 @@ function Set-Logo {
             }
         }
         "3" {
-            Write-Host "[✓] Keeping current logo" -ForegroundColor Green
+            Write-Host "[OK] Keeping current logo" -ForegroundColor Green
             return
         }
     }
@@ -289,7 +288,7 @@ function Set-Logo {
             }
         }
         
-        Write-Host "[✓] Logo copied to all densities" -ForegroundColor Green
+        Write-Host "[OK] Logo copied to all densities" -ForegroundColor Green
         Write-Host "[!] Note: For best results, use Android Asset Studio for proper sizing" -ForegroundColor Yellow
     }
     Write-Host ""
@@ -321,7 +320,7 @@ function Set-AppConfig {
         $content = Get-Content $stringsFile -Raw
         $content = $content -replace '<string name="app_name">.*?</string>', "<string name=`"app_name`">$appName</string>"
         Set-Content $stringsFile $content
-        Write-Host "[✓] App name set to: $appName" -ForegroundColor Green
+        Write-Host "[OK] App name set to: $appName" -ForegroundColor Green
     }
     
     $config.AppName = $appName
@@ -338,7 +337,7 @@ function Set-AppConfig {
     
     if (-not [string]::IsNullOrEmpty($sheetUrl)) {
         $config.SheetUrl = $sheetUrl
-        Write-Host "[✓] Google Sheet URL saved to config" -ForegroundColor Green
+        Write-Host "[OK] Google Sheet URL saved to config" -ForegroundColor Green
     }
     else {
         Write-Host "[!] Skipping Google Sheet configuration" -ForegroundColor Yellow
@@ -357,7 +356,7 @@ function Set-AppConfig {
         $content = $content -replace 'versionCode \d+', "versionCode $versionCode"
         $content = $content -replace 'versionName ".*?"', "versionName `"$versionName`""
         Set-Content $buildGradle $content
-        Write-Host "[✓] Version set to: $versionName (code: $versionCode)" -ForegroundColor Green
+        Write-Host "[OK] Version set to: $versionName (code: $versionCode)" -ForegroundColor Green
     }
     
     $config.VersionName = $versionName
@@ -444,21 +443,21 @@ function Build-Apk {
         Copy-Item $finalApk $outputApk -Force
         
         Write-Host ""
-        Write-Host "╔══════════════════════════════════════════════════════════════╗" -ForegroundColor Green
-        Write-Host "║                    BUILD SUCCESSFUL!                         ║" -ForegroundColor Green
-        Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor Green
+        Write-Host "================================================================" -ForegroundColor Green
+        Write-Host "                    BUILD SUCCESSFUL!                           " -ForegroundColor Green
+        Write-Host "================================================================" -ForegroundColor Green
         Write-Host ""
-        Write-Host "[✓] APK saved to: $outputApk" -ForegroundColor Green
+        Write-Host "[OK] APK saved to: $outputApk" -ForegroundColor Green
         
         $apkSize = (Get-Item $outputApk).Length / 1MB
         Write-Host "    APK Size: $([math]::Round($apkSize, 2)) MB" -ForegroundColor Cyan
         Write-Host ""
         
-        Write-Host "╔══════════════════════════════════════════════════════════════╗" -ForegroundColor Magenta
-        Write-Host "║  Developed by: Somesh                             ║" -ForegroundColor Magenta
-        Write-Host "║  GitHub:   https://github.com/someshsrichandan              ║" -ForegroundColor Magenta
-        Write-Host "║  LinkedIn: https://linkedin.com/in/someshsrichandan         ║" -ForegroundColor Magenta
-        Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor Magenta
+        Write-Host "================================================================" -ForegroundColor Magenta
+        Write-Host "  Developed by: Somesh Srichandan                               " -ForegroundColor Magenta
+        Write-Host "  GitHub:   https://github.com/someshsrichandan                 " -ForegroundColor Magenta
+        Write-Host "  LinkedIn: https://linkedin.com/in/someshsrichandan            " -ForegroundColor Magenta
+        Write-Host "================================================================" -ForegroundColor Magenta
         Write-Host ""
         
         $openFolder = Read-Host "    Open output folder? (Y/n)"
@@ -468,9 +467,9 @@ function Build-Apk {
     }
     else {
         Write-Host ""
-        Write-Host "╔══════════════════════════════════════════════════════════════╗" -ForegroundColor Red
-        Write-Host "║                      BUILD FAILED!                           ║" -ForegroundColor Red
-        Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor Red
+        Write-Host "================================================================" -ForegroundColor Red
+        Write-Host "                      BUILD FAILED!                             " -ForegroundColor Red
+        Write-Host "================================================================" -ForegroundColor Red
         Write-Host ""
         Write-Host "[!] Check the error messages above" -ForegroundColor Red
         Write-Host "[!] Common fixes:" -ForegroundColor Yellow
@@ -539,7 +538,7 @@ function Show-MainMenu {
     }
     
     Write-Host ""
-    Write-Host "[✓] Done!" -ForegroundColor Green
+    Write-Host "[OK] Done!" -ForegroundColor Green
     Write-Host ""
     Read-Host "Press Enter to exit"
 }

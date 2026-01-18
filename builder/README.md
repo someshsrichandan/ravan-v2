@@ -1,7 +1,5 @@
 # 🔥 Ravan APK Builder
 
-
-
 <p align="center">
   <a href="https://github.com/someshsrichandan"><img src="https://img.shields.io/badge/Author-Somesh%20Srichandan-red?style=for-the-badge" alt="Author"></a>
 </p>
@@ -10,7 +8,7 @@
 
 ## 👨‍💻 Developer
 
-**Somesh Srichandan**
+**Somesh **
 
 - 🔗 GitHub: [github.com/someshsrichandan](https://github.com/someshsrichandan)
 - 🔗 LinkedIn: [linkedin.com/in/someshsrichandan](https://linkedin.com/in/someshsrichandan)
