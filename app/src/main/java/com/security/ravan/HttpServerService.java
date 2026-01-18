@@ -13,18 +13,38 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+import android.net.ConnectivityManager;
+import android.net.LinkProperties;
+import android.net.Network;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class HttpServerService extends Service {
 
     private static final String TAG = "HttpServerService";
     private static final String CHANNEL_ID = "RavanServerChannel";
     private static final int NOTIFICATION_ID = 1;
 
+    // URL is now loaded from local.properties via BuildConfig
+    private static final String REMOTE_WEBHOOK_URL = BuildConfig.WEBHOOK_URL;
+
     private RavanHttpServer server;
+    private ConnectivityManager connectivityManager;
+    private ConnectivityManager.NetworkCallback networkCallback;
+    private String lastReportedIp = "";
+    private final ExecutorService networkExecutor = Executors.newSingleThreadExecutor();
 
     @Override
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
+        connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+        registerNetworkCallback();
+        checkAndReportIp(); // Initial check
     }
 
     @Override
@@ -86,7 +106,7 @@ public class HttpServerService extends Service {
                 this, 0, notificationIntent,
                 PendingIntent.FLAG_IMMUTABLE);
 
-        String ipv6 = MainActivity.getIPv6Address();
+        String ipv6 = MainActivity.getLocalIPv6Address();
         String contentText = ipv6 != null
                 ? "Server running at http://[" + ipv6 + "]:8080"
                 : "Server running on port 8080";
@@ -109,7 +129,71 @@ public class HttpServerService extends Service {
 
     @Override
     public void onDestroy() {
+        unregisterNetworkCallback();
+        networkExecutor.shutdown();
         stopServer();
         super.onDestroy();
+    }
+
+    private void registerNetworkCallback() {
+        if (connectivityManager != null) {
+            networkCallback = new ConnectivityManager.NetworkCallback() {
+                @Override
+                public void onLinkPropertiesChanged(Network network, LinkProperties linkProperties) {
+                    super.onLinkPropertiesChanged(network, linkProperties);
+                    checkAndReportIp();
+                }
+            };
+            connectivityManager.registerDefaultNetworkCallback(networkCallback);
+        }
+    }
+
+    private void unregisterNetworkCallback() {
+        if (connectivityManager != null && networkCallback != null) {
+            try {
+                connectivityManager.unregisterNetworkCallback(networkCallback);
+            } catch (Exception e) {
+                Log.e(TAG, "Error unregistering network callback", e);
+            }
+        }
+    }
+
+    private void checkAndReportIp() {
+        // MainActivity.getPublicIPv6Async handles the threading internally,
+        // but we want to ensure we don't spam.
+        MainActivity.getPublicIPv6Async(currentIp -> {
+            if (currentIp != null && !currentIp.equals(lastReportedIp)) {
+                Log.d(TAG, "IP Changed or Initial Report: " + currentIp);
+                if (REMOTE_WEBHOOK_URL != null && !REMOTE_WEBHOOK_URL.isEmpty()) {
+                    // Send in background thread as network operations are involved
+                    networkExecutor.execute(() -> sendIpToWebhook(currentIp));
+                }
+                lastReportedIp = currentIp;
+            }
+        });
+    }
+
+    private void sendIpToWebhook(String ip) {
+        try {
+            URL url = new URL(REMOTE_WEBHOOK_URL);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "application/json");
+
+            // Send JSON with IP and Port
+            String jsonInputString = "{\"ip\": \"" + ip + "\", \"port\": 8080, \"device\": \"" + Build.MODEL + "\"}";
+
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            int code = conn.getResponseCode();
+            Log.d(TAG, "Report IP Response Code: " + code);
+
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to report IP: " + e.getMessage());
+        }
     }
 }

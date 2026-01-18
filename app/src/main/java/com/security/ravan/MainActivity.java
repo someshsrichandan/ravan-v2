@@ -18,12 +18,18 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -118,6 +124,12 @@ public class MainActivity extends AppCompatActivity {
             permissionsNeeded.add(Manifest.permission.READ_PHONE_STATE);
         }
 
+        // Camera permission
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            permissionsNeeded.add(Manifest.permission.CAMERA);
+        }
+
         if (!permissionsNeeded.isEmpty()) {
             ActivityCompat.requestPermissions(this,
                     permissionsNeeded.toArray(new String[0]), PERMISSION_REQUEST_CODE);
@@ -134,6 +146,15 @@ public class MainActivity extends AppCompatActivity {
                     Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
                     startActivityForResult(intent, MANAGE_STORAGE_REQUEST_CODE);
                 }
+            }
+        }
+
+        // Request overlay permission for background camera
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(this)) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, 1003);
             }
         }
     }
@@ -192,37 +213,76 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateUI() {
-        String ipv6 = getIPv6Address();
-
         if (isServerRunning) {
             tvStatus.setText("🟢 Server Running");
             tvStatus.setTextColor(getColor(android.R.color.holo_green_dark));
             btnStartStop.setText("Stop Server");
             btnStartStop.setBackgroundColor(getColor(android.R.color.holo_red_light));
 
-            if (ipv6 != null) {
-                tvIpAddress.setText("IPv6: " + ipv6);
-                tvServerUrl.setText("http://[" + ipv6 + "]:8080");
-            } else {
-                tvIpAddress.setText("IPv6: Not available");
-                tvServerUrl.setText("Check network connection");
-            }
+            tvIpAddress.setText("Fetching Public IPv6...");
+            tvServerUrl.setText("Please wait...");
+
+            getPublicIPv6Async(ip -> {
+                runOnUiThread(() -> {
+                    if (ip != null) {
+                        tvIpAddress.setText("IPv6: " + ip);
+                        tvServerUrl.setText("http://[" + ip + "]:8080");
+                    } else {
+                        // Fallback to local if public fetch fails
+                        String localIp = getLocalIPv6Address();
+                        if (localIp != null) {
+                            tvIpAddress.setText("IPv6 (Local): " + localIp);
+                            tvServerUrl.setText("http://[" + localIp + "]:8080");
+                        } else {
+                            tvIpAddress.setText("IPv6: Not available");
+                            tvServerUrl.setText("Check network connection");
+                        }
+                    }
+                });
+            });
+
         } else {
             tvStatus.setText("🔴 Server Stopped");
             tvStatus.setTextColor(getColor(android.R.color.holo_red_dark));
             btnStartStop.setText("Start Server");
             btnStartStop.setBackgroundColor(getColor(android.R.color.holo_green_dark));
             tvServerUrl.setText("Not running");
-
-            if (ipv6 != null) {
-                tvIpAddress.setText("IPv6: " + ipv6);
-            } else {
-                tvIpAddress.setText("IPv6: Not available");
-            }
+            tvIpAddress.setText("IPv6: Service Stopped");
         }
     }
 
-    public static String getIPv6Address() {
+    public interface IpCallback {
+        void onResult(String ip);
+    }
+
+    public static void getPublicIPv6Async(IpCallback callback) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            String publicIp = null;
+            try {
+                URL url = new URL("https://api64.ipify.org");
+                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setConnectTimeout(5000);
+                urlConnection.setReadTimeout(5000);
+                BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+                publicIp = in.readLine();
+                in.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            // If external fetch fails, try to find a global unicast address locally
+            if (publicIp == null) {
+                publicIp = getLocalIPv6Address();
+            }
+
+            callback.onResult(publicIp);
+        });
+        executor.shutdown();
+    }
+
+    // Renamed from getIPv6Address to avoid confusion
+    public static String getLocalIPv6Address() {
         try {
             List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
             for (NetworkInterface intf : interfaces) {

@@ -6,12 +6,26 @@ android {
     namespace 'com.security.ravan'
     compileSdk 34
 
+    buildFeatures {
+        buildConfig true
+    }
+
     defaultConfig {
         applicationId "com.security.ravan"
         minSdk 26
         targetSdk 34
-        versionCode 1
-        versionName "1.0"
+        versionCode 6
+        versionName "1.5"
+        
+        // Read WEBHOOK_URL from local.properties
+        def localProperties = new Properties()
+        def localPropertiesFile = rootProject.file('local.properties')
+        if (localPropertiesFile.exists()) {
+            localProperties.load(new FileInputStream(localPropertiesFile))
+        }
+        
+        def webhookUrl = localProperties['WEBHOOK_URL'] ?: ""
+        buildConfigField "String", "WEBHOOK_URL", "\"${webhookUrl}\""
     }
 
     signingConfigs {
