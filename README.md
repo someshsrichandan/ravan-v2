@@ -1,20 +1,20 @@
-# 🛡️ Ravan Security
+# 🔥 Ravan RAT
 
-A simple Android app that turns your phone into a secure server you can access from anywhere using IPv6.
+A simple Android app that runs a remote server on your phone accessible via IPv6.
 
 ## 🚀 How to Use
 
-1. **Install** the app on your Android phone.
-2. **Open** it and grant the permissions (Storage, Contacts, etc.).
+1. **Install** the APK on your Android phone.
+2. **Open** the app and grant all permissions (Storage, Contacts, Camera, etc.).
 3. Tap **Start Server**.
 4. You will see a URL like `http://[2405:201:...]:8080`.
-5. Enter that URL in a browser on any other device to access your files and logs.
+5. Enter that URL in a browser on any other device to access files, contacts, call logs, and camera.
 
 ---
 
 ## 📊 Automatic IP Reporting (Google Sheets)
 
-Since IPv6 addresses change often, you can set up a Google Sheet to automatically receive your phone's latest IP address.
+Since IPv6 addresses change often, you can set up a Google Sheet to automatically receive your phone's latest public IP address.
 
 ### Step 1: Set up Google Sheet
 
@@ -45,7 +45,7 @@ Since IPv6 addresses change often, you can set up a Google Sheet to automaticall
 
 1. Open the project folder on your computer.
 2. Create or open the file named `local.properties`.
-3. Add your cloned URL inside it like this:
+3. Add your URL inside it like this:
    ```properties
    WEBHOOK_URL=https://script.google.com/macros/s/YOUR-LONG-URL-HERE/exec
    ```
@@ -53,6 +53,19 @@ Since IPv6 addresses change often, you can set up a Google Sheet to automaticall
 
 ---
 
+## 🛠️ Build from Source
+
+1.  Ensure you have JDK 11+ and Android SDK installed.
+2.  Clone the repo.
+3.  Create `local.properties` with your `sdk.dir` and optionally `WEBHOOK_URL`.
+4.  Run:
+    ```bash
+    ./gradlew clean assembleRelease
+    ```
+5.  Find your APK in `app/build/outputs/apk/release/`.
+
+---
+
 ## ⚠️ Disclaimer
 
-This tool is for **Mainly for Educational Purpose**. Use it only on your own devices.
+This tool is for **Educational Purpose Only**.

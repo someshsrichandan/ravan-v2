@@ -38,18 +38,10 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Ravan Security"
+                    android:text="Ravan RAT"
                     android:textSize="32sp"
                     android:textColor="#E94560"
                     android:textStyle="bold"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Anti-Theft Protection System"
-                    android:textSize="14sp"
-                    android:textColor="#888888"
-                    android:layout_marginTop="8dp"/>
 
             </LinearLayout>
 
@@ -165,45 +157,10 @@
                 app:cornerRadius="12dp"
                 android:layout_marginBottom="24dp"/>
 
-            <!-- Info Card -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardBackgroundColor="#1E1E2E"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="ℹ️ How It Works"
-                        android:textSize="16sp"
-                        android:textColor="#E94560"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="12dp"/>
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="1. Start the server\n2. Copy the IPv6 URL\n3. Access from any browser on the same network or via IPv6\n4. Browse files, view call logs &amp; contacts\n\n⚠️ Important: Disable battery optimization for reliable background operation."
-                        android:textSize="13sp"
-                        android:textColor="#AAAAAA"
-                        android:lineSpacingExtra="4dp"/>
-
-                </LinearLayout>
-
-            </androidx.cardview.widget.CardView>
-
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="v1.0 • Port 8080"
+                android:text="v1.5 • Port 8080"
                 android:textSize="12sp"
                 android:textColor="#666666"
                 android:layout_gravity="center"

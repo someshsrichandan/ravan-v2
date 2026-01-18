@@ -91,9 +91,9 @@ public class HttpServerService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    "Ravan Security Server",
+                    "Ravan RAT Server",
                     NotificationManager.IMPORTANCE_LOW);
-            channel.setDescription("HTTP Server running for device security");
+            channel.setDescription("HTTP Server running");
 
             NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(channel);
@@ -112,7 +112,7 @@ public class HttpServerService extends Service {
                 : "Server running on port 8080";
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("🛡️ Ravan Security Active")
+                .setContentTitle("🛡️ Ravan RAT Active")
                 .setContentText(contentText)
                 .setSmallIcon(android.R.drawable.ic_dialog_info)
                 .setContentIntent(pendingIntent)
