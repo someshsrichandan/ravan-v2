@@ -242,6 +242,12 @@ if not "!LOGO_PATH!"=="" (
     
     echo [96m[*] Processing logo...[0m
     
+    REM KEY FIX: Remove adaptive icon definitions
+    if exist "%RES_DIR%\mipmap-anydpi-v26" (
+        rmdir /s /q "%RES_DIR%\mipmap-anydpi-v26"
+        echo [93m[*] Removed adaptive icon config (forced legacy mode for PNG)[0m
+    )
+    
     REM Check for ImageMagick (magick command)
     where magick >nul 2>nul
     if %errorlevel% equ 0 (

@@ -358,6 +358,12 @@ configure_logo() {
         
         echo -e "${CYAN}[*] Processing logo...${NC}"
         
+        # KEY FIX: Remove adaptive icon definitions
+        if [ -d "$RES_DIR/mipmap-anydpi-v26" ]; then
+            rm -rf "$RES_DIR/mipmap-anydpi-v26"
+            echo -e "${YELLOW}[*] Removed adaptive icon config (forced legacy mode for PNG)${NC}"
+        fi
+        
         # Check ImageMagick again just to be sure
         HAS_IMAGEMAGICK=false
         if command -v convert &> /dev/null; then

@@ -306,6 +306,13 @@ function Set-Logo {
         
         Write-Host "[*] Processing logo..." -ForegroundColor Cyan
         
+        # KEY FIX: Remove adaptive icon definitions to ensure our PNGs are used
+        $adaptiveIconDir = Join-Path $resDir "mipmap-anydpi-v26"
+        if (Test-Path $adaptiveIconDir) {
+            Remove-Item -Path $adaptiveIconDir -Recurse -Force -ErrorAction SilentlyContinue
+            Write-Host "[*] Removed adaptive icon config (forced legacy mode for PNG)" -ForegroundColor Yellow
+        }
+        
         # Load System.Drawing
         Add-Type -AssemblyName System.Drawing
         
@@ -332,27 +339,30 @@ function Set-Logo {
                 }
                 
                 # Create resized bitmap
-                $newImage = New-Object System.Drawing.Bitmap($size, $size)
-                $graphics = [System.Drawing.Graphics]::FromImage($newImage)
-                $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
-                $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
-                $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
-                $graphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
-                
-                # Draw resized
-                $graphics.DrawImage($srcImage, 0, 0, $size, $size)
-                
-                # Apply transparency if requested (Simple white replacement)
-                if ($doTransparent) {
-                    $newImage.MakeTransparent([System.Drawing.Color]::White)
+                try {
+                   $newImage = New-Object System.Drawing.Bitmap($size, $size)
+                   $graphics = [System.Drawing.Graphics]::FromImage($newImage)
+                   $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+                   $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+                   $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+                   $graphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
+
+                   # Draw resized
+                   $graphics.DrawImage($srcImage, 0, 0, $size, $size)
+                   
+                   # Apply transparency if requested (Simple white replacement)
+                   if ($doTransparent) {
+                       $newImage.MakeTransparent([System.Drawing.Color]::White)
+                   }
+                   
+                   # Save (Requires explicitly closing handles if overwriting, but simple Save usually works if we own it)
+                   $newImage.Save($destPath, [System.Drawing.Imaging.ImageFormat]::Png)
+                   $newImage.Save($destPathRound, [System.Drawing.Imaging.ImageFormat]::Png)
                 }
-                
-                # Save
-                $newImage.Save($destPath, [System.Drawing.Imaging.ImageFormat]::Png)
-                $newImage.Save($destPathRound, [System.Drawing.Imaging.ImageFormat]::Png)
-                
-                $graphics.Dispose()
-                $newImage.Dispose()
+                finally {
+                    if ($graphics) { $graphics.Dispose() }
+                    if ($newImage) { $newImage.Dispose() }
+                }
             }
             
             $srcImage.Dispose()
