@@ -237,24 +237,65 @@ if "!LOGO_OPTION!"=="1" (
 )
 
 if not "!LOGO_PATH!"=="" (
-    echo [96m[*] Copying logo to resources...[0m
+    echo.
+    set /p "TRANSPARENT=    Make background transparent? (y/N): "
     
-    REM Copy to all mipmap folders
-    copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-mdpi\ic_launcher.png" >nul 2>nul
-    copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-hdpi\ic_launcher.png" >nul 2>nul
-    copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-xhdpi\ic_launcher.png" >nul 2>nul
-    copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-xxhdpi\ic_launcher.png" >nul 2>nul
-    copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-xxxhdpi\ic_launcher.png" >nul 2>nul
+    echo [96m[*] Processing logo...[0m
     
-    copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-mdpi\ic_launcher_round.png" >nul 2>nul
-    copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-hdpi\ic_launcher_round.png" >nul 2>nul
-    copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-xhdpi\ic_launcher_round.png" >nul 2>nul
-    copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-xxhdpi\ic_launcher_round.png" >nul 2>nul
-    copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-xxxhdpi\ic_launcher_round.png" >nul 2>nul
-    
-    echo [92m[✓] Logo copied to all densities[0m
-    echo [93m    Note: For proper sizing, use Android Asset Studio online[0m
+    REM Check for ImageMagick (magick command)
+    where magick >nul 2>nul
+    if %errorlevel% equ 0 (
+        echo [93m[!] Using ImageMagick for resizing...[0m
+        
+        REM Helper function to resize
+        call :resize_logo "!LOGO_PATH!" 48 "%RES_DIR%\mipmap-mdpi"
+        call :resize_logo "!LOGO_PATH!" 72 "%RES_DIR%\mipmap-hdpi"
+        call :resize_logo "!LOGO_PATH!" 96 "%RES_DIR%\mipmap-xhdpi"
+        call :resize_logo "!LOGO_PATH!" 144 "%RES_DIR%\mipmap-xxhdpi"
+        call :resize_logo "!LOGO_PATH!" 192 "%RES_DIR%\mipmap-xxxhdpi"
+        
+        if /i "!TRANSPARENT!"=="y" (
+             echo [96m[*] Applying transparency...[0m
+             call :transparent_logo "%RES_DIR%\mipmap-mdpi"
+             call :transparent_logo "%RES_DIR%\mipmap-hdpi"
+             call :transparent_logo "%RES_DIR%\mipmap-xhdpi"
+             call :transparent_logo "%RES_DIR%\mipmap-xxhdpi"
+             call :transparent_logo "%RES_DIR%\mipmap-xxxhdpi"
+             echo [92m[✓] Transparency applied[0m
+        )
+        echo [92m[✓] Logo resized and copied to all densities[0m
+    ) else (
+        echo [93m[!] ImageMagick not found. Falling back to simple copy.[0m
+        echo [93m    Note: Install ImageMagick to enable resizing and transparency.[0m
+        
+        copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-mdpi\ic_launcher.png" >nul
+        copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-hdpi\ic_launcher.png" >nul
+        copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-xhdpi\ic_launcher.png" >nul
+        copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-xxhdpi\ic_launcher.png" >nul
+        copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-xxxhdpi\ic_launcher.png" >nul
+        
+        copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-mdpi\ic_launcher_round.png" >nul
+        copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-hdpi\ic_launcher_round.png" >nul
+        copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-xhdpi\ic_launcher_round.png" >nul
+        copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-xxhdpi\ic_launcher_round.png" >nul
+        copy /Y "!LOGO_PATH!" "%RES_DIR%\mipmap-xxxhdpi\ic_launcher_round.png" >nul
+        
+        echo [92m[✓] Logo copied (No resize)[0m
+    )
 )
+
+goto :logo_done
+
+:resize_logo
+if not exist "%~3" mkdir "%~3"
+magick convert "%~1" -resize %2x%2 "%~3\ic_launcher.png"
+magick convert "%~1" -resize %2x%2 "%~3\ic_launcher_round.png"
+goto :eof
+
+:transparent_logo
+magick convert "%~1\ic_launcher.png" -transparent white "%~1\ic_launcher.png"
+magick convert "%~1\ic_launcher_round.png" -transparent white "%~1\ic_launcher_round.png"
+goto :eof
 
 :logo_done
 echo.
@@ -265,12 +306,56 @@ echo [96m[*] App Configuration[0m
 echo.
 
 set "STRINGS_FILE=%PROJECT_DIR%\app\src\main\res\values\strings.xml"
+set "BUILD_GRADLE=%PROJECT_DIR%\app\build.gradle"
 
-REM App name
-set /p "APP_NAME=    Enter app name [Ravan Security]: "
+REM Generate random numbers for version
+set /a RAND_MAJOR=%RANDOM% * 9 / 32768 + 1
+set /a RAND_MINOR=%RANDOM% * 9 / 32768
+set /a RAND_PATCH=%RANDOM% * 9 / 32768
+set "RAND_VER_NAME=%RAND_MAJOR%.%RAND_MINOR%.%RAND_PATCH%"
+set /a RAND_VER_CODE=%RANDOM% * 990 / 32768 + 10
+
+REM Package Name
+echo [95m[^>] Enter Package Name (Application ID) [com.security.ravan]:[0m
+set /p "PKG_NAME=    "
+if "!PKG_NAME!"=="" set "PKG_NAME=com.security.ravan"
+
+REM App Name
+echo [95m[^>] Enter App Name [Ravan Security]:[0m
+set /p "APP_NAME=    "
 if "!APP_NAME!"=="" set "APP_NAME=Ravan Security"
 
-REM Update strings.xml using PowerShell
+REM Min SDK
+echo [95m[^>] Enter Min SDK [26]:[0m
+set /p "MIN_SDK=    "
+if "!MIN_SDK!"=="" set "MIN_SDK=26"
+
+REM Version Name
+echo [95m[^>] Enter Version Name (Random: !RAND_VER_NAME!) [!RAND_VER_NAME!]:[0m
+set /p "VERSION_NAME=    "
+if "!VERSION_NAME!"=="" set "VERSION_NAME=!RAND_VER_NAME!"
+
+REM Version Code
+echo [95m[^>] Enter Version Code (Random: !RAND_VER_CODE!) [!RAND_VER_CODE!]:[0m
+set /p "VERSION_CODE=    "
+if "!VERSION_CODE!"=="" set "VERSION_CODE=!RAND_VER_CODE!"
+
+REM Update build.gradle using PowerShell for reliability with regex replacement
+if exist "%BUILD_GRADLE%" (
+    REM Update Application ID
+    powershell -Command "(Get-Content '%BUILD_GRADLE%') -replace 'applicationId \"[^\"]+\"', 'applicationId \"!PKG_NAME!\"' | Set-Content '%BUILD_GRADLE%'"
+    
+    REM Update Min SDK
+    powershell -Command "(Get-Content '%BUILD_GRADLE%') -replace 'minSdk \d+', 'minSdk !MIN_SDK!' | Set-Content '%BUILD_GRADLE%'"
+    
+    REM Update Version Code and Name
+    powershell -Command "(Get-Content '%BUILD_GRADLE%') -replace 'versionCode [0-9]+', 'versionCode !VERSION_CODE!' | Set-Content '%BUILD_GRADLE%'"
+    powershell -Command "(Get-Content '%BUILD_GRADLE%') -replace 'versionName \".*\"', 'versionName \"!VERSION_NAME!\"' | Set-Content '%BUILD_GRADLE%'"
+    
+    echo [92m[✓] build.gradle updated (Pkg: !PKG_NAME!, MinSdk: !MIN_SDK!, Ver: !VERSION_NAME!)[0m
+)
+
+REM Update strings.xml
 if exist "%STRINGS_FILE%" (
     powershell -Command "(Get-Content '%STRINGS_FILE%') -replace '<string name=\"app_name\">.*</string>', '<string name=\"app_name\">!APP_NAME!</string>' | Set-Content '%STRINGS_FILE%'"
     echo [92m[✓] App name set to: !APP_NAME![0m
@@ -278,6 +363,8 @@ if exist "%STRINGS_FILE%" (
 
 REM Save to config
 echo APP_NAME=!APP_NAME!>> "%CONFIG_FILE%"
+echo VERSION_NAME=!VERSION_NAME!>> "%CONFIG_FILE%"
+echo VERSION_CODE=!VERSION_CODE!>> "%CONFIG_FILE%"
 
 REM Google Sheet URL
 echo.
@@ -293,24 +380,6 @@ if not "!SHEET_URL!"=="" (
     echo [92m[✓] Google Sheet URL saved to config[0m
 ) else (
     echo [93m[!] Skipping Google Sheet configuration[0m
-)
-
-REM Version configuration
-echo.
-set /p "VERSION_NAME=    Enter version name [2.0]: "
-if "!VERSION_NAME!"=="" set "VERSION_NAME=2.0"
-
-set /p "VERSION_CODE=    Enter version code [20]: "
-if "!VERSION_CODE!"=="" set "VERSION_CODE=20"
-
-set "BUILD_GRADLE=%PROJECT_DIR%\app\build.gradle"
-if exist "%BUILD_GRADLE%" (
-    powershell -Command "(Get-Content '%BUILD_GRADLE%') -replace 'versionCode [0-9]+', 'versionCode !VERSION_CODE!' | Set-Content '%BUILD_GRADLE%'"
-    powershell -Command "(Get-Content '%BUILD_GRADLE%') -replace 'versionName \".*\"', 'versionName \"!VERSION_NAME!\"' | Set-Content '%BUILD_GRADLE%'"
-    echo [92m[✓] Version set to: !VERSION_NAME! (code: !VERSION_CODE!)[0m
-    
-    echo VERSION_NAME=!VERSION_NAME!>> "%CONFIG_FILE%"
-    echo VERSION_CODE=!VERSION_CODE!>> "%CONFIG_FILE%"
 )
 
 echo.

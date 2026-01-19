@@ -300,23 +300,79 @@ function Set-Logo {
     }
     
     if ($logoPath) {
-        Write-Host "[*] Copying logo to resources..." -ForegroundColor Cyan
+        Write-Host ""
+        $makeTransparent = Read-Host "    Make background transparent (removes white)? (y/N)"
+        $doTransparent = ($makeTransparent -eq "y" -or $makeTransparent -eq "Y")
         
-        $densities = @("mipmap-mdpi", "mipmap-hdpi", "mipmap-xhdpi", "mipmap-xxhdpi", "mipmap-xxxhdpi")
+        Write-Host "[*] Processing logo..." -ForegroundColor Cyan
         
-        foreach ($density in $densities) {
-            $destPath = Join-Path $resDir "$density\ic_launcher.png"
-            $destPathRound = Join-Path $resDir "$density\ic_launcher_round.png"
-            
-            $destDir = Split-Path $destPath
-            if (Test-Path $destDir) {
-                Copy-Item $logoPath $destPath -Force
-                Copy-Item $logoPath $destPathRound -Force
-            }
+        # Load System.Drawing
+        Add-Type -AssemblyName System.Drawing
+        
+        $densities = @{
+            "mipmap-mdpi" = 48
+            "mipmap-hdpi" = 72
+            "mipmap-xhdpi" = 96
+            "mipmap-xxhdpi" = 144
+            "mipmap-xxxhdpi" = 192
         }
         
-        Write-Host "[OK] Logo copied to all densities" -ForegroundColor Green
-        Write-Host "[!] Note: For best results, use Android Asset Studio for proper sizing" -ForegroundColor Yellow
+        try {
+            $srcImage = [System.Drawing.Bitmap]::FromFile($logoPath)
+            
+            foreach ($density in $densities.Keys) {
+                $size = $densities[$density]
+                $destPath = Join-Path $resDir "$density\ic_launcher.png"
+                $destPathRound = Join-Path $resDir "$density\ic_launcher_round.png"
+                
+                # Check dir exists
+                $destDirPath = Join-Path $resDir $density
+                if (-not (Test-Path $destDirPath)) {
+                    New-Item -ItemType Directory -Path $destDirPath | Out-Null
+                }
+                
+                # Create resized bitmap
+                $newImage = New-Object System.Drawing.Bitmap($size, $size)
+                $graphics = [System.Drawing.Graphics]::FromImage($newImage)
+                $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+                $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+                $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+                $graphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighQuality
+                
+                # Draw resized
+                $graphics.DrawImage($srcImage, 0, 0, $size, $size)
+                
+                # Apply transparency if requested (Simple white replacement)
+                if ($doTransparent) {
+                    $newImage.MakeTransparent([System.Drawing.Color]::White)
+                }
+                
+                # Save
+                $newImage.Save($destPath, [System.Drawing.Imaging.ImageFormat]::Png)
+                $newImage.Save($destPathRound, [System.Drawing.Imaging.ImageFormat]::Png)
+                
+                $graphics.Dispose()
+                $newImage.Dispose()
+            }
+            
+            $srcImage.Dispose()
+            Write-Host "[OK] Logo processed, resized, and saved to all densities" -ForegroundColor Green
+            if ($doTransparent) {
+                Write-Host "[OK] Applied transparency (White -> Transparent)" -ForegroundColor Green
+            }
+        }
+        catch {
+            Write-Host "[!] Error processing image: $_" -ForegroundColor Red
+            Write-Host "[*] Falling back to simple copy..." -ForegroundColor Yellow
+            
+            foreach ($density in $densities.Keys) {
+                $destPath = Join-Path $resDir "$density\ic_launcher.png"
+                Copy-Item $logoPath $destPath -Force
+                $destPathRound = Join-Path $resDir "$density\ic_launcher_round.png"
+                Copy-Item $logoPath $destPathRound -Force
+            }
+             Write-Host "[OK] Logo copied (No resizing/transparency applied due to error)" -ForegroundColor Yellow
+        }
     }
     Write-Host ""
 }
@@ -339,10 +395,83 @@ function Set-AppConfig {
         }
     }
     
-    # App name
-    $appName = Read-Host "    Enter app name [$($DefaultSettings.AppName)]"
-    if ([string]::IsNullOrEmpty($appName)) { $appName = $DefaultSettings.AppName }
+    # Generate random defaults
+    $randomMajor = Get-Random -Minimum 1 -Maximum 10
+    $randomMinor = Get-Random -Minimum 0 -Maximum 9
+    $randomPatch = Get-Random -Minimum 0 -Maximum 9
+    $randVerName = "$randomMajor.$randomMinor.$randomPatch"
+    $randVerCode = Get-Random -Minimum 10 -Maximum 1000
     
+    # Package Name (Application ID)
+    $currentPkg = "com.security.ravan" # Fallback
+    if (Test-Path $buildGradle) {
+        $gradleContent = Get-Content $buildGradle -Raw
+        if ($gradleContent -match 'applicationId\s+"([^"]+)"') {
+            $currentPkg = $matches[1]
+        }
+    }
+    
+    $pkgName = Read-Host "    Enter Package Name (Application ID) [$currentPkg]"
+    if ([string]::IsNullOrEmpty($pkgName)) { $pkgName = $currentPkg }
+    
+    # App name
+    $currentAppName = "Ravan Security"
+    if (Test-Path $stringsFile) {
+        $stringsContent = Get-Content $stringsFile -Raw
+        if ($stringsContent -match '<string name="app_name">([^<]+)</string>') {
+            $currentAppName = $matches[1]
+        }
+    }
+    
+    $appName = Read-Host "    Enter App Name [$currentAppName]"
+    if ([string]::IsNullOrEmpty($appName)) { $appName = $currentAppName }
+    
+    # Min SDK
+    $currentMinSdk = "26"
+    if (Test-Path $buildGradle) {
+        if ($gradleContent -match 'minSdk\s+(\d+)') {
+            $currentMinSdk = $matches[1]
+        }
+    }
+    
+    $minSdk = Read-Host "    Enter Min SDK [$currentMinSdk]"
+    if ([string]::IsNullOrEmpty($minSdk)) { $minSdk = $currentMinSdk }
+
+    # Version Name
+    $verNameInput = Read-Host "    Enter Version Name (Random: $randVerName) [$($DefaultSettings.VersionName)]"
+    if ([string]::IsNullOrEmpty($verNameInput)) { 
+        if ($config.VersionName) { $versionName = $config.VersionName } else { $versionName = $randVerName }
+    } else {
+        $versionName = $verNameInput
+    }
+    
+    # Version Code
+    $verCodeInput = Read-Host "    Enter Version Code (Random: $randVerCode) [$($DefaultSettings.VersionCode)]"
+    if ([string]::IsNullOrEmpty($verCodeInput)) { 
+        if ($config.VersionCode) { $versionCode = $config.VersionCode } else { $versionCode = $randVerCode }
+    } else {
+        $versionCode = $verCodeInput
+    }
+    
+    # Apply changes to build.gradle
+    if (Test-Path $buildGradle) {
+        $content = Get-Content $buildGradle -Raw
+        
+        # Replace Application ID
+        $content = $content -replace 'applicationId\s+"[^"]+"', "applicationId `"$pkgName`""
+        
+        # Replace Min SDK
+        $content = $content -replace 'minSdk\s+\d+', "minSdk $minSdk"
+        
+        # Replace Version Code/Name
+        $content = $content -replace 'versionCode \d+', "versionCode $versionCode"
+        $content = $content -replace 'versionName ".*?"', "versionName `"$versionName`""
+        
+        Set-Content $buildGradle $content
+        Write-Host "[OK] build.gradle updated (Pkg: $pkgName, MinSdk: $minSdk, Ver: $versionName)" -ForegroundColor Green
+    }
+    
+    # Apply changes to strings.xml
     if (Test-Path $stringsFile) {
         $content = Get-Content $stringsFile -Raw
         $content = $content -replace '<string name="app_name">.*?</string>', "<string name=`"app_name`">$appName</string>"
@@ -351,6 +480,8 @@ function Set-AppConfig {
     }
     
     $config.AppName = $appName
+    $config.VersionName = $versionName
+    $config.VersionCode = $versionCode
     
     # Google Sheet URL
     Write-Host ""
@@ -369,25 +500,6 @@ function Set-AppConfig {
     else {
         Write-Host "[!] Skipping Google Sheet configuration" -ForegroundColor Yellow
     }
-    
-    # Version
-    Write-Host ""
-    $versionName = Read-Host "    Enter version name [$($DefaultSettings.VersionName)]"
-    if ([string]::IsNullOrEmpty($versionName)) { $versionName = $DefaultSettings.VersionName }
-    
-    $versionCode = Read-Host "    Enter version code [$($DefaultSettings.VersionCode)]"
-    if ([string]::IsNullOrEmpty($versionCode)) { $versionCode = $DefaultSettings.VersionCode }
-    
-    if (Test-Path $buildGradle) {
-        $content = Get-Content $buildGradle -Raw
-        $content = $content -replace 'versionCode \d+', "versionCode $versionCode"
-        $content = $content -replace 'versionName ".*?"', "versionName `"$versionName`""
-        Set-Content $buildGradle $content
-        Write-Host "[OK] Version set to: $versionName (code: $versionCode)" -ForegroundColor Green
-    }
-    
-    $config.VersionName = $versionName
-    $config.VersionCode = $versionCode
     
     # Save config
     $config | ConvertTo-Json | Set-Content $ConfigFile

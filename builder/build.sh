@@ -353,44 +353,56 @@ configure_logo() {
     esac
     
     if [ -n "$LOGO_PATH" ]; then
+        echo ""
+        read -p "    Make background transparent (removes white)? (y/N): " TRANSPARENT
+        
         echo -e "${CYAN}[*] Processing logo...${NC}"
+        
+        # Check ImageMagick again just to be sure
+        HAS_IMAGEMAGICK=false
+        if command -v convert &> /dev/null; then
+            HAS_IMAGEMAGICK=true
+        fi
         
         # Copy to different sizes
         if [ "$HAS_IMAGEMAGICK" = true ]; then
-            # Resize for different densities
+            echo -e "${YELLOW}[!] Using ImageMagick for resizing...${NC}"
+            
+            # Helper to resize
             convert "$LOGO_PATH" -resize 48x48 "$RES_DIR/mipmap-mdpi/ic_launcher.png" 2>/dev/null
             convert "$LOGO_PATH" -resize 72x72 "$RES_DIR/mipmap-hdpi/ic_launcher.png" 2>/dev/null
             convert "$LOGO_PATH" -resize 96x96 "$RES_DIR/mipmap-xhdpi/ic_launcher.png" 2>/dev/null
             convert "$LOGO_PATH" -resize 144x144 "$RES_DIR/mipmap-xxhdpi/ic_launcher.png" 2>/dev/null
             convert "$LOGO_PATH" -resize 192x192 "$RES_DIR/mipmap-xxxhdpi/ic_launcher.png" 2>/dev/null
             
-            # Round icons (keep same, Android handles rounding)
             convert "$LOGO_PATH" -resize 48x48 "$RES_DIR/mipmap-mdpi/ic_launcher_round.png" 2>/dev/null
             convert "$LOGO_PATH" -resize 72x72 "$RES_DIR/mipmap-hdpi/ic_launcher_round.png" 2>/dev/null
             convert "$LOGO_PATH" -resize 96x96 "$RES_DIR/mipmap-xhdpi/ic_launcher_round.png" 2>/dev/null
             convert "$LOGO_PATH" -resize 144x144 "$RES_DIR/mipmap-xxhdpi/ic_launcher_round.png" 2>/dev/null
             convert "$LOGO_PATH" -resize 192x192 "$RES_DIR/mipmap-xxxhdpi/ic_launcher_round.png" 2>/dev/null
             
+            # Apply transparency if requested
+            if [[ "$TRANSPARENT" =~ ^[Yy]$ ]]; then
+                echo -e "${CYAN}[*] Applying transparency...${NC}"
+                for density in mipmap-mdpi mipmap-hdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
+                    convert "$RES_DIR/$density/ic_launcher.png" -transparent white "$RES_DIR/$density/ic_launcher.png" 2>/dev/null
+                    convert "$RES_DIR/$density/ic_launcher_round.png" -transparent white "$RES_DIR/$density/ic_launcher_round.png" 2>/dev/null
+                done
+                echo -e "${GREEN}[✓] Transparency applied${NC}"
+            fi
+            
             echo -e "${GREEN}[✓] Logo resized and copied to all densities${NC}"
         else
+            echo -e "${YELLOW}[!] ImageMagick not found. Falling back to simple copy.${NC}"
+            echo -e "${YELLOW}    Note: Install ImageMagick to enable resizing and transparency.${NC}"
+            
             # Just copy to all folders without resize
             for density in mipmap-mdpi mipmap-hdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
+                mkdir -p "$RES_DIR/$density"
                 cp "$LOGO_PATH" "$RES_DIR/$density/ic_launcher.png" 2>/dev/null
                 cp "$LOGO_PATH" "$RES_DIR/$density/ic_launcher_round.png" 2>/dev/null
             done
-            echo -e "${GREEN}[✓] Logo copied (Install ImageMagick for auto-resize)${NC}"
-        fi
-        
-        # Ask about transparent icon
-        echo ""
-        read -p "    Make icon background transparent? (y/N): " TRANSPARENT
-        if [[ "$TRANSPARENT" =~ ^[Yy]$ ]] && [ "$HAS_IMAGEMAGICK" = true ]; then
-            echo -e "${CYAN}[*] Making background transparent...${NC}"
-            for density in mipmap-mdpi mipmap-hdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
-                convert "$RES_DIR/$density/ic_launcher.png" -transparent white "$RES_DIR/$density/ic_launcher.png" 2>/dev/null
-                convert "$RES_DIR/$density/ic_launcher_round.png" -transparent white "$RES_DIR/$density/ic_launcher_round.png" 2>/dev/null
-            done
-            echo -e "${GREEN}[✓] Background made transparent${NC}"
+            echo -e "${GREEN}[✓] Logo copied (No resize)${NC}"
         fi
     fi
     echo ""
@@ -404,21 +416,61 @@ configure_app() {
     STRINGS_FILE="$PROJECT_DIR/app/src/main/res/values/strings.xml"
     BUILD_GRADLE="$PROJECT_DIR/app/build.gradle"
     
+    # Generate random defaults
+    RAND_MAJOR=$((1 + RANDOM % 10))
+    RAND_MINOR=$((RANDOM % 10))
+    RAND_PATCH=$((RANDOM % 10))
+    RAND_VER_NAME="$RAND_MAJOR.$RAND_MINOR.$RAND_PATCH"
+    RAND_VER_CODE=$((10 + RANDOM % 990))
+    
+    # Package Name
+    read -p "    Enter Package Name (Application ID) [com.security.ravan]: " PKG_NAME
+    PKG_NAME=${PKG_NAME:-com.security.ravan}
+    
     # App name
-    read -p "    Enter app name [Ravan Security]: " APP_NAME
+    read -p "    Enter App Name [Ravan Security]: " APP_NAME
     APP_NAME=${APP_NAME:-Ravan Security}
+    
+    # Min SDK
+    read -p "    Enter Min SDK [26]: " MIN_SDK
+    MIN_SDK=${MIN_SDK:-26}
+    
+    # Version Name
+    read -p "    Enter Version Name (Random: $RAND_VER_NAME) [$RAND_VER_NAME]: " VERSION_NAME
+    VERSION_NAME=${VERSION_NAME:-$RAND_VER_NAME}
+    
+    # Version Code
+    read -p "    Enter Version Code (Random: $RAND_VER_CODE) [$RAND_VER_CODE]: " VERSION_CODE
+    VERSION_CODE=${VERSION_CODE:-$RAND_VER_CODE}
+    
+    # Update build.gradle
+    if [ -f "$BUILD_GRADLE" ]; then
+        # Update Application ID
+        sed -i.bak "s|applicationId \"[^\"]*\"|applicationId \"$PKG_NAME\"|g" "$BUILD_GRADLE"
+        
+        # Update Min SDK
+        sed -i.bak "s|minSdk [0-9]*|minSdk $MIN_SDK|g" "$BUILD_GRADLE"
+        
+        # Update Version Code and Name
+        sed -i.bak "s|versionCode [0-9]*|versionCode $VERSION_CODE|g" "$BUILD_GRADLE"
+        sed -i.bak "s|versionName \".*\"|versionName \"$VERSION_NAME\"|g" "$BUILD_GRADLE"
+        
+        rm -f "${BUILD_GRADLE}.bak"
+        echo -e "${GREEN}[✓] build.gradle updated (Pkg: $PKG_NAME, MinSdk: $MIN_SDK, Ver: $VERSION_NAME)${NC}"
+    fi
     
     # Update strings.xml
     if [ -f "$STRINGS_FILE" ]; then
-        # Escape special characters for sed
         ESCAPED_NAME=$(echo "$APP_NAME" | sed 's/[&/\]/\\&/g')
         sed -i.bak "s|<string name=\"app_name\">.*</string>|<string name=\"app_name\">$ESCAPED_NAME</string>|g" "$STRINGS_FILE"
         rm -f "${STRINGS_FILE}.bak"
         echo -e "${GREEN}[✓] App name set to: $APP_NAME${NC}"
     fi
     
-    # Save app name to config
+    # Save to config
     echo "APP_NAME=$APP_NAME" >> "$CONFIG_FILE"
+    echo "VERSION_NAME=$VERSION_NAME" >> "$CONFIG_FILE"
+    echo "VERSION_CODE=$VERSION_CODE" >> "$CONFIG_FILE"
     
     # Google Sheet URL
     echo ""
@@ -434,24 +486,6 @@ configure_app() {
         echo -e "${GREEN}[✓] Google Sheet URL saved to config${NC}"
     else
         echo -e "${YELLOW}[!] Skipping Google Sheet configuration${NC}"
-    fi
-    
-    # Version configuration
-    echo ""
-    read -p "    Enter version name [2.0]: " VERSION_NAME
-    VERSION_NAME=${VERSION_NAME:-2.0}
-    
-    read -p "    Enter version code [20]: " VERSION_CODE
-    VERSION_CODE=${VERSION_CODE:-20}
-    
-    if [ -f "$BUILD_GRADLE" ]; then
-        sed -i.bak "s|versionCode [0-9]*|versionCode $VERSION_CODE|g" "$BUILD_GRADLE"
-        sed -i.bak "s|versionName \".*\"|versionName \"$VERSION_NAME\"|g" "$BUILD_GRADLE"
-        rm -f "${BUILD_GRADLE}.bak"
-        echo -e "${GREEN}[✓] Version set to: $VERSION_NAME (code: $VERSION_CODE)${NC}"
-        
-        echo "VERSION_NAME=$VERSION_NAME" >> "$CONFIG_FILE"
-        echo "VERSION_CODE=$VERSION_CODE" >> "$CONFIG_FILE"
     fi
     
     echo ""
